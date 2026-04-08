@@ -7,7 +7,7 @@ import {Link} from "@inertiajs/react";
 
 
 const AppMenuitem = (props) => {
-    const pathname = route(route().current());
+    const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
     const searchParams = '';
     const { activeMenu, setActiveMenu } = useContext(MenuContext);
     const item = props.item;

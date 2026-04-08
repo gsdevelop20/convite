@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'zapi' => [
+        'base_url' => env('ZAPI_BASE_URL', 'https://api.z-api.io'),
+        'instance_id' => env('ZAPI_INSTANCE_ID'),
+        'token' => env('ZAPI_TOKEN'),
+        'client_token' => env('ZAPI_CLIENT_TOKEN'),
+    ],
+
 ];

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Webhooks\ZApiWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,3 +18,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::post('/webhooks/zapi/messages', [ZApiWebhookController::class, 'messages'])->name('webhooks.zapi.messages');
+Route::post('/webhooks/zapi/message-status', [ZApiWebhookController::class, 'messageStatus'])->name('webhooks.zapi.message-status');
