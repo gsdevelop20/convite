@@ -384,7 +384,7 @@ export default function EventsIndex({ events }) {
                     </div>
                     <div className="col-12">
                         <div className="p-3 border-round bg-blue-50 text-blue-700 line-height-3">
-                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não vou</strong>, <strong>Ainda não sei</strong> e <strong>Vou com acompanhante</strong>.
+                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não vou</strong> e <strong>Ainda não sei</strong>.
                             {form.data.invitation_asset_type === 'text'
                                 ? ' No convite em texto, os botões seguem na mesma mensagem.'
                                 : ' No convite com imagem ou PDF, o arquivo vai primeiro e os botões são enviados logo depois.'}

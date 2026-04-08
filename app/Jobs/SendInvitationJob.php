@@ -89,7 +89,6 @@ class SendInvitationJob implements ShouldQueue
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'confirmed'), 'label' => 'Vou'],
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'declined'), 'label' => 'Não vou'],
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'undecided'), 'label' => 'Ainda não sei'],
-            ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'with_companion'), 'label' => 'Vou com acompanhante'],
         ];
     }
 

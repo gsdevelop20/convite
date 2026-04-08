@@ -83,12 +83,11 @@ class SendInvitationButtonsTest extends TestCase
 
         $this->assertCount(1, $fakeGateway->buttonCalls);
         $this->assertSame('5561995706650', $fakeGateway->buttonCalls[0]['phone']);
-        $this->assertCount(4, $fakeGateway->buttonCalls[0]['buttons']);
+        $this->assertCount(3, $fakeGateway->buttonCalls[0]['buttons']);
         $this->assertSame([
             "evt:{$event->id}:guest:{$guest->id}:confirmed",
             "evt:{$event->id}:guest:{$guest->id}:declined",
             "evt:{$event->id}:guest:{$guest->id}:undecided",
-            "evt:{$event->id}:guest:{$guest->id}:with_companion",
         ], array_column($fakeGateway->buttonCalls[0]['buttons'], 'id'));
         $this->assertSame(InvitationDispatchStatus::Sent, $dispatch->delivery_status);
         $this->assertSame('button-1', $dispatch->provider_message_id);

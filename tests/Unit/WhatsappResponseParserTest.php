@@ -33,6 +33,31 @@ class WhatsappResponseParserTest extends TestCase
         ]));
     }
 
+    public function test_it_parses_companion_count_button_response_ids(): void
+    {
+        $parser = new WhatsappResponseParser();
+
+        $parsed = $parser->parsePayload([
+            'buttonsResponseMessage' => [
+                'buttonId' => 'evt:15:guest:88:companions:4',
+                'message' => '4',
+            ],
+        ], GuestStatus::WaitingCompanionCount);
+
+        $this->assertSame(ParsedIntent::CompanionCount, $parsed->intent);
+        $this->assertSame(4, $parsed->companionsCount);
+        $this->assertSame([
+            'event_id' => 15,
+            'guest_id' => 88,
+            'action' => 'companions',
+            'companions_count' => 4,
+        ], $parser->extractButtonContext([
+            'buttonsResponseMessage' => [
+                'buttonId' => 'evt:15:guest:88:companions:4',
+            ],
+        ]));
+    }
+
     public function test_it_keeps_companion_count_parsing_for_plain_text(): void
     {
         $parser = new WhatsappResponseParser();

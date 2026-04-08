@@ -16,15 +16,24 @@ class WhatsappResponseParser
             return null;
         }
 
-        if (preg_match('/^evt:(\d+):guest:(\d+):(confirmed|declined|undecided|with_companion)$/', $buttonId, $matches) !== 1) {
-            return null;
+        if (preg_match('/^evt:(\d+):guest:(\d+):(confirmed|declined|undecided|with_companion)$/', $buttonId, $matches) === 1) {
+            return [
+                'event_id' => (int) $matches[1],
+                'guest_id' => (int) $matches[2],
+                'action' => $matches[3],
+            ];
         }
 
-        return [
-            'event_id' => (int) $matches[1],
-            'guest_id' => (int) $matches[2],
-            'action' => $matches[3],
-        ];
+        if (preg_match('/^evt:(\d+):guest:(\d+):companions:(\d{1,2})$/', $buttonId, $matches) === 1) {
+            return [
+                'event_id' => (int) $matches[1],
+                'guest_id' => (int) $matches[2],
+                'action' => 'companions',
+                'companions_count' => (int) $matches[3],
+            ];
+        }
+
+        return null;
     }
 
     public function parsePayload(array $payload, GuestStatus $currentStatus): ParsedWhatsappMessage
@@ -32,13 +41,19 @@ class WhatsappResponseParser
         $buttonId = $payload['buttonsResponseMessage']['buttonId'] ?? null;
 
         if (is_string($buttonId) && $buttonId !== '') {
-            $buttonAction = $this->extractButtonContext($payload)['action'] ?? $buttonId;
+            $buttonContext = $this->extractButtonContext($payload);
+            $buttonAction = $buttonContext['action'] ?? $buttonId;
 
             return match ($buttonAction) {
                 'confirmed' => new ParsedWhatsappMessage(ParsedIntent::Confirmed, normalizedText: $buttonId),
                 'declined' => new ParsedWhatsappMessage(ParsedIntent::Declined, normalizedText: $buttonId),
                 'undecided' => new ParsedWhatsappMessage(ParsedIntent::Undecided, normalizedText: $buttonId),
                 'with_companion' => new ParsedWhatsappMessage(ParsedIntent::WaitingCompanionCount, normalizedText: $buttonId),
+                'companions' => new ParsedWhatsappMessage(
+                    ParsedIntent::CompanionCount,
+                    companionsCount: $buttonContext['companions_count'] ?? 0,
+                    normalizedText: $buttonId,
+                ),
                 default => $this->parse(
                     $payload['buttonsResponseMessage']['message'] ?? $payload['text']['message'] ?? $payload['message'] ?? $payload['body'] ?? '',
                     $currentStatus,

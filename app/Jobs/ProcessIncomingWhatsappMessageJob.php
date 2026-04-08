@@ -9,6 +9,7 @@ use App\Models\Guest;
 use App\Models\GuestResponse;
 use App\Models\InvitationDispatch;
 use App\Models\WebhookReceipt;
+use App\Enums\GuestStatus;
 use App\Services\GuestStateMachine;
 use App\Services\PhoneNormalizer;
 use App\Services\ReminderScheduler;
@@ -100,25 +101,29 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
         }
 
         if ($transition->autoReply) {
-            $dispatch = InvitationDispatch::create([
-                'event_id' => $guest->event_id,
-                'guest_id' => $guest->id,
-                'kind' => InvitationDispatchKind::Followup,
-                'message_type' => 'text',
-                'outbound_message' => $transition->autoReply,
-                'delivery_status' => InvitationDispatchStatus::Pending,
-            ]);
+            if ($transition->status === GuestStatus::WaitingCompanionCount) {
+                $this->sendCompanionCountPrompts($guest, $gateway, $transition->autoReply);
+            } else {
+                $dispatch = InvitationDispatch::create([
+                    'event_id' => $guest->event_id,
+                    'guest_id' => $guest->id,
+                    'kind' => InvitationDispatchKind::Followup,
+                    'message_type' => 'text',
+                    'outbound_message' => $transition->autoReply,
+                    'delivery_status' => InvitationDispatchStatus::Pending,
+                ]);
 
-            $result = $gateway->sendText($guest->normalized_phone, $transition->autoReply);
+                $result = $gateway->sendText($guest->normalized_phone, $transition->autoReply);
 
-            $dispatch->forceFill([
-                'delivery_status' => $result->successful ? InvitationDispatchStatus::Sent : InvitationDispatchStatus::Failed,
-                'provider_message_id' => $result->providerMessageId ?: null,
-                'provider_zaap_id' => $result->providerZaapId,
-                'sent_at' => $result->successful ? now() : null,
-                'failure_reason' => $result->failureReason,
-                'payload_json' => $result->payload,
-            ])->save();
+                $dispatch->forceFill([
+                    'delivery_status' => $result->successful ? InvitationDispatchStatus::Sent : InvitationDispatchStatus::Failed,
+                    'provider_message_id' => $result->providerMessageId ?: null,
+                    'provider_zaap_id' => $result->providerZaapId,
+                    'sent_at' => $result->successful ? now() : null,
+                    'failure_reason' => $result->failureReason,
+                    'payload_json' => $result->payload,
+                ])->save();
+            }
         }
 
         $receipt->forceFill(['processed_at' => now()])->save();
@@ -155,5 +160,46 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
             ->where('normalized_phone', $normalizedPhone)
             ->latest('id')
             ->first();
+    }
+
+    protected function companionCountButtons(Guest $guest): array
+    {
+        return collect(range(1, 10))
+            ->map(fn (int $count): array => [
+                'id' => "evt:{$guest->event_id}:guest:{$guest->id}:companions:{$count}",
+                'label' => (string) $count,
+            ])
+            ->all();
+    }
+
+    protected function sendCompanionCountPrompts(Guest $guest, WhatsappGateway $gateway, string $message): void
+    {
+        $buttonGroups = array_chunk($this->companionCountButtons($guest), 4);
+
+        foreach ($buttonGroups as $index => $buttons) {
+            $dispatch = InvitationDispatch::create([
+                'event_id' => $guest->event_id,
+                'guest_id' => $guest->id,
+                'kind' => InvitationDispatchKind::Followup,
+                'message_type' => 'text',
+                'outbound_message' => $index === 0 ? $message : 'Mais opções de acompanhantes:',
+                'delivery_status' => InvitationDispatchStatus::Pending,
+            ]);
+
+            $result = $gateway->sendButtonList(
+                $guest->normalized_phone,
+                $dispatch->outbound_message,
+                $buttons,
+            );
+
+            $dispatch->forceFill([
+                'delivery_status' => $result->successful ? InvitationDispatchStatus::Sent : InvitationDispatchStatus::Failed,
+                'provider_message_id' => $result->providerMessageId ?: null,
+                'provider_zaap_id' => $result->providerZaapId,
+                'sent_at' => $result->successful ? now() : null,
+                'failure_reason' => $result->failureReason,
+                'payload_json' => $result->payload,
+            ])->save();
+        }
     }
 }
