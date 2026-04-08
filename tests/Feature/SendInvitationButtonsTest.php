@@ -25,7 +25,7 @@ class SendInvitationButtonsTest extends TestCase
             'start_time' => '20:00',
             'location_name' => 'Buffet Central',
             'location_address' => 'Rua A, 10',
-            'invitation_message_template' => 'Ola :guest_name, confirme sua presenca.',
+            'invitation_message_template' => 'Ola :guest_name, confirme sua presena.',
             'invitation_asset_type' => 'text',
             'reminder_days_before' => 15,
             'status' => 'draft',

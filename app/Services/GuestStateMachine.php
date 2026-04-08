@@ -14,7 +14,7 @@ class GuestStateMachine
         return match ($message->intent) {
             ParsedIntent::Confirmed => new GuestStateTransition(
                 status: GuestStatus::Confirmed,
-                autoReply: 'Presenca confirmada.',
+                autoReply: 'Presença confirmada.',
                 cancelReminder: true,
             ),
             ParsedIntent::Declined => new GuestStateTransition(
@@ -45,7 +45,7 @@ class GuestStateMachine
             return new GuestStateTransition(
                 status: GuestStatus::Confirmed,
                 companionsCount: 0,
-                autoReply: 'Presenca confirmada.',
+                autoReply: 'Presença confirmada.',
                 cancelReminder: true,
             );
         }
@@ -53,7 +53,7 @@ class GuestStateMachine
         return new GuestStateTransition(
             status: GuestStatus::ConfirmedWithCompanion,
             companionsCount: $companionsCount,
-            autoReply: "Presenca confirmada com {$companionsCount} acompanhante(s).",
+            autoReply: "Presença confirmada com {$companionsCount} acompanhante(s).",
             cancelReminder: true,
         );
     }

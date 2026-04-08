@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
@@ -7,6 +7,7 @@ import { Dialog } from 'primereact/dialog';
 import { Dropdown } from 'primereact/dropdown';
 import { InputText } from 'primereact/inputtext';
 import { InputTextarea } from 'primereact/inputtextarea';
+import { SplitButton } from 'primereact/splitbutton';
 import Layout from '@/Layouts/layout/layout.jsx';
 import StatusTag from '@/Components/events/StatusTag.jsx';
 
@@ -162,22 +163,32 @@ export default function EventsIndex({ events }) {
     };
 
     const actionsBody = (row) => (
-        <div className="flex flex-column gap-2 align-items-stretch">
-            <Link href={route('events.queue', row.id)}>
-                <Button label="Acompanhar fila" icon="pi pi-list" outlined size="small" className="w-full" />
-            </Link>
-            <Button
-                label="Fila de envio"
-                icon="pi pi-send"
-                severity="success"
-                size="small"
-                onClick={() => queueInvitations(row)}
-                disabled={row.guests_count === 0}
-                className="w-full"
-            />
-            <Button label="Editar" icon="pi pi-pencil" outlined size="small" onClick={() => openEdit(row)} className="w-full" />
-            <Button label="Convidados" icon="pi pi-users" size="small" onClick={() => openGuests(row)} className="w-full" />
-        </div>
+        <SplitButton
+            label="Convidados"
+            icon="pi pi-users"
+            size="small"
+            onClick={() => openGuests(row)}
+            model={[
+                {
+                    label: 'Editar',
+                    icon: 'pi pi-pencil',
+                    command: () => openEdit(row),
+                },
+                {
+                    label: 'Acompanhar fila',
+                    icon: 'pi pi-list',
+                    command: () => router.visit(route('events.queue', row.id)),
+                },
+                {
+                    label: 'Fila de envio',
+                    icon: 'pi pi-send',
+                    command: () => queueInvitations(row),
+                    disabled: row.guests_count === 0,
+                },
+            ]}
+            outlined
+            className="w-full white-space-nowrap"
+        />
     );
 
     const assetBody = (row) => {
@@ -274,6 +285,22 @@ export default function EventsIndex({ events }) {
         });
     };
 
+    useEffect(() => {
+        if (!guestDialogVisible || !selectedEventId) {
+            return undefined;
+        }
+
+        const intervalId = window.setInterval(() => {
+            router.reload({
+                only: ['events'],
+                preserveState: true,
+                preserveScroll: true,
+            });
+        }, 10000);
+
+        return () => window.clearInterval(intervalId);
+    }, [guestDialogVisible, selectedEventId]);
+
     return (
         <Layout>
             <Head title="Eventos" />
@@ -299,8 +326,8 @@ export default function EventsIndex({ events }) {
                     <Column
                         body={actionsBody}
                         header="Ações"
-                        bodyStyle={{ minWidth: '11rem', verticalAlign: 'top' }}
-                        headerStyle={{ minWidth: '11rem' }}
+                        bodyStyle={{ minWidth: '12rem', verticalAlign: 'top' }}
+                        headerStyle={{ minWidth: '12rem' }}
                     />
                 </DataTable>
             </div>
