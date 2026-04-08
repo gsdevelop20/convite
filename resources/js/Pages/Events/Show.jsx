@@ -13,6 +13,7 @@ import StatusTag from '@/Components/events/StatusTag.jsx';
 export default function EventShow({ event, summary, guests, dispatches, reminders }) {
     const guestForm = useForm({ name: '', phone: '' });
     const importForm = useForm({ rows: '' });
+    const accompaniedBody = (row) => ((row.companions_count ?? 0) > 0 || row.current_status === 'confirmed_with_companion' ? 'Sim' : 'Não');
 
     const addGuest = (e) => {
         e.preventDefault();
@@ -101,7 +102,7 @@ export default function EventShow({ event, summary, guests, dispatches, reminder
                             <Column field="name" header="Nome" />
                             <Column field="phone_e164" header="Telefone" />
                             <Column field="current_status" header="Status" body={(row) => <StatusTag value={row.current_status} />} />
-                            <Column field="companions_count" header="Acomp." />
+                            <Column header="Com crianças" body={accompaniedBody} />
                             <Column field="invited_at" header="Convite enviado" />
                             <Column field="last_response_at" header="Última resposta" />
                         </DataTable>

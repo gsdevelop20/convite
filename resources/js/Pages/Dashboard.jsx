@@ -11,10 +11,11 @@ export default function Dashboard({ stats, rsvpByEvent, recentEvents }) {
             <Head title="Dashboard" />
 
             <div className="grid">
-                <StatCard title="Eventos" value={stats.events} subtitle="Base total cadastrada" icon="calendar" color="blue" />
-                <StatCard title="Convidados" value={stats.guests} subtitle="Todos os eventos" icon="users" color="orange" />
-                <StatCard title="Confirmados" value={stats.confirmed} subtitle="Inclui acompanhantes" icon="check-circle" color="green" />
-                <StatCard title="Lembretes" value={stats.pendingReminders} subtitle="Pendentes para envio" icon="send" color="purple" />
+                <StatCard className="col-12 md:col-6 xl:col-4" title="Eventos" value={stats.events} subtitle="Base total cadastrada" icon="calendar" color="blue" />
+                <StatCard className="col-12 md:col-6 xl:col-4" title="Convidados" value={stats.guests} subtitle="Todos os eventos" icon="users" color="orange" />
+                <StatCard className="col-12 md:col-6 xl:col-4" title="Confirmados" value={stats.confirmed} subtitle="Inclui acompanhantes" icon="check-circle" color="green" />
+                <StatCard className="col-12 md:col-6 xl:col-6" title="Com crianças" value={stats.confirmedWithChildren} subtitle="Confirmados com crianças" icon="heart" color="pink" />
+                <StatCard className="col-12 md:col-6 xl:col-6" title="Lembretes" value={stats.pendingReminders} subtitle="Pendentes para envio" icon="send" color="purple" />
 
                 <div className="col-12 xl:col-5">
                     <div className="card h-full">
@@ -62,6 +63,12 @@ export default function Dashboard({ stats, rsvpByEvent, recentEvents }) {
                                                 <div className="surface-100 border-round p-2">
                                                     <div className="text-500 text-sm line-height-3">Confirmados</div>
                                                     <div className="font-semibold text-sm md:text-base mt-1 line-height-3">{event.confirmed_count}</div>
+                                                </div>
+                                            </div>
+                                            <div className="col-6">
+                                                <div className="surface-100 border-round p-2">
+                                                    <div className="text-500 text-sm line-height-3">Com crianças</div>
+                                                    <div className="font-semibold text-sm md:text-base mt-1 line-height-3">{event.confirmed_with_children_count}</div>
                                                 </div>
                                             </div>
                                             <div className="col-6">

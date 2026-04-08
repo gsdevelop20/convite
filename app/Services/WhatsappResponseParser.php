@@ -16,7 +16,7 @@ class WhatsappResponseParser
             return null;
         }
 
-        if (preg_match('/^evt:(\d+):guest:(\d+):(confirmed|declined|undecided|with_companion)$/', $buttonId, $matches) === 1) {
+        if (preg_match('/^evt:(\d+):guest:(\d+):(confirmed|declined|undecided|with_companion|with_children)$/', $buttonId, $matches) === 1) {
             return [
                 'event_id' => (int) $matches[1],
                 'guest_id' => (int) $matches[2],
@@ -48,6 +48,7 @@ class WhatsappResponseParser
                 'confirmed' => new ParsedWhatsappMessage(ParsedIntent::Confirmed, normalizedText: $buttonId),
                 'declined' => new ParsedWhatsappMessage(ParsedIntent::Declined, normalizedText: $buttonId),
                 'undecided' => new ParsedWhatsappMessage(ParsedIntent::Undecided, normalizedText: $buttonId),
+                'with_children' => new ParsedWhatsappMessage(ParsedIntent::WithChildren, normalizedText: $buttonId),
                 'with_companion' => new ParsedWhatsappMessage(ParsedIntent::WaitingCompanionCount, normalizedText: $buttonId),
                 'companions' => new ParsedWhatsappMessage(
                     ParsedIntent::CompanionCount,
@@ -88,6 +89,7 @@ class WhatsappResponseParser
             in_array($normalized, ['1', '1.', '1 - vou', 'vou'], true) => new ParsedWhatsappMessage(ParsedIntent::Confirmed, normalizedText: $normalized),
             in_array($normalized, ['2', '2.', '2 - nao vou', 'não vou', 'nao vou'], true) => new ParsedWhatsappMessage(ParsedIntent::Declined, normalizedText: $normalized),
             in_array($normalized, ['3', '3.', '3 - ainda nao sei', '3 - ainda não sei', 'ainda nao sei', 'ainda não sei'], true) => new ParsedWhatsappMessage(ParsedIntent::Undecided, normalizedText: $normalized),
+            in_array($normalized, ['vou com crianças', 'vou com criancas', 'com crianças', 'com criancas'], true) => new ParsedWhatsappMessage(ParsedIntent::WithChildren, normalizedText: $normalized),
             in_array($normalized, ['4', '4.', '4 - vou com acompanhante', 'vou com acompanhante'], true) => new ParsedWhatsappMessage(ParsedIntent::WaitingCompanionCount, normalizedText: $normalized),
             default => new ParsedWhatsappMessage(ParsedIntent::Unknown, normalizedText: $normalized),
         };

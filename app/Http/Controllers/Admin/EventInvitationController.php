@@ -24,7 +24,7 @@ class EventInvitationController extends Controller
                     'event_id' => $event->id,
                     'kind' => InvitationDispatchKind::InitialInvite,
                     'message_type' => $event->invitation_asset_type->value,
-                    'outbound_asset_url' => $event->invitation_asset_url,
+                    'outbound_asset_url' => $event->invitation_asset_type->value === 'text' ? null : $event->invitation_asset_url,
                     'delivery_status' => InvitationDispatchStatus::Pending,
                 ]);
 

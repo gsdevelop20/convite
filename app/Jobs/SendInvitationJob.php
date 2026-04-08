@@ -28,16 +28,27 @@ class SendInvitationJob implements ShouldQueue
     public function handle(WhatsappGateway $gateway, InvitationMessageBuilder $messageBuilder): void
     {
         $dispatch = InvitationDispatch::with(['event', 'guest'])->findOrFail($this->dispatchId);
+
+        if ($this->hasBeenSuperseded($dispatch)) {
+            $dispatch->forceFill([
+                'delivery_status' => InvitationDispatchStatus::Failed,
+                'failure_reason' => 'Dispatch substituído por um envio mais recente.',
+            ])->save();
+
+            return;
+        }
+
         $event = $dispatch->event;
         $guest = $dispatch->guest;
         $message = $dispatch->outbound_message ?: $messageBuilder->build($event, $guest, $dispatch->kind->value === 'reminder');
         $buttons = $this->rsvpButtons();
+        $assetUrl = $this->resolveAssetUrl($dispatch);
 
         $result = match ($event->invitation_asset_type) {
             InvitationAssetType::Image => $this->sendAssetWithButtons(
                 fn () => $gateway->sendImage(
                     $guest->normalized_phone,
-                    $dispatch->outbound_asset_url ?: $event->invitation_asset_url,
+                    $assetUrl,
                     $message,
                 ),
                 fn () => $gateway->sendButtonList(
@@ -49,7 +60,7 @@ class SendInvitationJob implements ShouldQueue
             InvitationAssetType::Pdf => $this->sendAssetWithButtons(
                 fn () => $gateway->sendDocument(
                     $guest->normalized_phone,
-                    $dispatch->outbound_asset_url ?: $event->invitation_asset_url,
+                    $assetUrl,
                     'pdf',
                     "convite-{$guest->id}.pdf",
                     $message,
@@ -89,12 +100,32 @@ class SendInvitationJob implements ShouldQueue
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'confirmed'), 'label' => 'Vou'],
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'declined'), 'label' => 'Não vou'],
             ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'undecided'), 'label' => 'Ainda não sei'],
+            ['id' => $this->buildButtonId($dispatch->event_id, $dispatch->guest_id, 'with_children'), 'label' => 'Vou com crianças'],
         ];
     }
 
     protected function buildButtonId(int $eventId, int $guestId, string $action): string
     {
         return "evt:{$eventId}:guest:{$guestId}:{$action}";
+    }
+
+    protected function resolveAssetUrl(InvitationDispatch $dispatch): ?string
+    {
+        if ($dispatch->event->invitation_asset_type === InvitationAssetType::Text) {
+            return null;
+        }
+
+        return $dispatch->event->invitation_asset_url ?: $dispatch->outbound_asset_url;
+    }
+
+    protected function hasBeenSuperseded(InvitationDispatch $dispatch): bool
+    {
+        return InvitationDispatch::query()
+            ->where('guest_id', $dispatch->guest_id)
+            ->where('event_id', $dispatch->event_id)
+            ->where('kind', $dispatch->kind)
+            ->where('id', '>', $dispatch->id)
+            ->exists();
     }
 
     protected function sendAssetWithButtons(callable $sendAsset, callable $sendButtons)

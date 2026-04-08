@@ -27,6 +27,12 @@ class GuestStateMachine
                 autoReply: 'Vou te lembrar novamente 15 dias antes do evento.',
                 scheduleReminder: true,
             ),
+            ParsedIntent::WithChildren => new GuestStateTransition(
+                status: GuestStatus::Confirmed,
+                companionsCount: 1,
+                autoReply: 'Presença confirmada com crianças.',
+                cancelReminder: true,
+            ),
             ParsedIntent::WaitingCompanionCount => new GuestStateTransition(
                 status: GuestStatus::WaitingCompanionCount,
                 autoReply: 'Quantos acompanhantes irao com voce?',
@@ -34,7 +40,7 @@ class GuestStateMachine
             ParsedIntent::CompanionCount => $this->resolveCompanionCount($message->companionsCount ?? 0),
             default => new GuestStateTransition(
                 status: $currentStatus,
-                autoReply: 'Nao entendi sua resposta. Responda com 1, 2, 3 ou 4.',
+                autoReply: 'Não entendi sua resposta. Use um dos botões da mensagem.',
             ),
         };
     }

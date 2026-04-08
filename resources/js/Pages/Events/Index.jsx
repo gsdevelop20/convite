@@ -201,6 +201,8 @@ export default function EventsIndex({ events }) {
         return labels[row.invitation_asset_type] ?? row.invitation_asset_type;
     };
 
+    const accompaniedBody = (row) => ((row.companions_count ?? 0) > 0 || row.current_status === 'confirmed_with_companion' ? 'Sim' : 'Não');
+
     const submitGuest = (event) => {
         event.preventDefault();
 
@@ -411,7 +413,7 @@ export default function EventsIndex({ events }) {
                     </div>
                     <div className="col-12">
                         <div className="p-3 border-round bg-blue-50 text-blue-700 line-height-3">
-                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não vou</strong> e <strong>Ainda não sei</strong>.
+                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não vou</strong>, <strong>Ainda não sei</strong> e <strong>Vou com crianças</strong>.
                             {form.data.invitation_asset_type === 'text'
                                 ? ' No convite em texto, os botões seguem na mesma mensagem.'
                                 : ' No convite com imagem ou PDF, o arquivo vai primeiro e os botões são enviados logo depois.'}
@@ -568,7 +570,7 @@ export default function EventsIndex({ events }) {
                                     <Column field="name" header="Nome" />
                                     <Column field="phone_e164" header="Telefone" />
                                     <Column field="current_status" header="Status" body={(row) => <StatusTag value={row.current_status} />} />
-                                    <Column field="companions_count" header="Acomp." />
+                                    <Column header="Com crianças" body={accompaniedBody} />
                                     <Column
                                         header="Ações"
                                         body={(row) => (

@@ -21,6 +21,9 @@ class DashboardController extends Controller
                     GuestStatus::Confirmed->value,
                     GuestStatus::ConfirmedWithCompanion->value,
                 ]),
+                'guests as confirmed_with_children_guests_count' => fn ($query) => $query
+                    ->where('current_status', GuestStatus::Confirmed->value)
+                    ->where('companions_count', '>', 0),
                 'guests as declined_guests_count' => fn ($query) => $query->where('current_status', GuestStatus::Declined->value),
                 'guests as undecided_guests_count' => fn ($query) => $query->where('current_status', GuestStatus::Undecided->value),
             ])
@@ -36,6 +39,10 @@ class DashboardController extends Controller
                     GuestStatus::Confirmed->value,
                     GuestStatus::ConfirmedWithCompanion->value,
                 ])->count(),
+                'confirmedWithChildren' => Guest::query()
+                    ->where('current_status', GuestStatus::Confirmed->value)
+                    ->where('companions_count', '>', 0)
+                    ->count(),
                 'pendingReminders' => ReminderSchedule::where('status', 'pending')->count(),
             ],
             'rsvpByEvent' => $events->map(fn (Event $event) => [
@@ -45,6 +52,7 @@ class DashboardController extends Controller
                 'guests_count' => $event->guests_count,
                 'pending_count' => $event->pending_guests_count,
                 'confirmed_count' => $event->confirmed_guests_count,
+                'confirmed_with_children_count' => $event->confirmed_with_children_guests_count,
                 'declined_count' => $event->declined_guests_count,
                 'undecided_count' => $event->undecided_guests_count,
             ]),

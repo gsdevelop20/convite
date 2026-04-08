@@ -23,6 +23,20 @@ class GuestStateMachineTest extends TestCase
         $this->assertSame('Quantos acompanhantes irao com voce?', $transition->autoReply);
     }
 
+    public function test_it_confirms_guest_with_children(): void
+    {
+        $machine = new GuestStateMachine();
+
+        $transition = $machine->transition(
+            GuestStatus::Pending,
+            new ParsedWhatsappMessage(ParsedIntent::WithChildren, normalizedText: 'vou com crianças'),
+        );
+
+        $this->assertSame(GuestStatus::Confirmed, $transition->status);
+        $this->assertSame(1, $transition->companionsCount);
+        $this->assertSame('Presença confirmada com crianças.', $transition->autoReply);
+    }
+
     public function test_it_normalizes_zero_companions_to_confirmed(): void
     {
         $machine = new GuestStateMachine();

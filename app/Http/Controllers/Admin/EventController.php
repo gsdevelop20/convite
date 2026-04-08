@@ -198,13 +198,13 @@ class EventController extends Controller
             return;
         }
 
-        $storagePrefix = rtrim(Storage::disk('public')->url(''), '/').'/';
+        $path = parse_url($assetUrl, PHP_URL_PATH);
 
-        if (! str_starts_with($assetUrl, $storagePrefix)) {
+        if (! is_string($path) || ! str_starts_with($path, '/storage/')) {
             return;
         }
 
-        $path = ltrim(str_replace($storagePrefix, '', $assetUrl), '/');
+        $path = ltrim(substr($path, strlen('/storage/')), '/');
 
         if ($path !== '') {
             Storage::disk('public')->delete($path);

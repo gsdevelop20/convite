@@ -1,8 +1,8 @@
 import React from 'react';
 
-export default function StatCard({ title, value, subtitle, icon, color = 'primary' }) {
+export default function StatCard({ title, value, subtitle, icon, color = 'primary', className = '' }) {
     return (
-        <div className="col-12 md:col-6 xl:col-3">
+        <div className={className || 'col-12 md:col-6 xl:col-3'}>
             <div className="card mb-0">
                 <div className="flex justify-content-between align-items-start gap-3">
                     <div className="min-w-0 flex-1">

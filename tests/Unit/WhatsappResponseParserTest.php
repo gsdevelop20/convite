@@ -15,20 +15,20 @@ class WhatsappResponseParserTest extends TestCase
 
         $parsed = $parser->parsePayload([
             'buttonsResponseMessage' => [
-                'buttonId' => 'evt:15:guest:88:with_companion',
-                'message' => 'Vou com acompanhante',
+                'buttonId' => 'evt:15:guest:88:with_children',
+                'message' => 'Vou com crianças',
             ],
         ], GuestStatus::Pending);
 
-        $this->assertSame(ParsedIntent::WaitingCompanionCount, $parsed->intent);
-        $this->assertSame('evt:15:guest:88:with_companion', $parsed->normalizedText);
+        $this->assertSame(ParsedIntent::WithChildren, $parsed->intent);
+        $this->assertSame('evt:15:guest:88:with_children', $parsed->normalizedText);
         $this->assertSame([
             'event_id' => 15,
             'guest_id' => 88,
-            'action' => 'with_companion',
+            'action' => 'with_children',
         ], $parser->extractButtonContext([
             'buttonsResponseMessage' => [
-                'buttonId' => 'evt:15:guest:88:with_companion',
+                'buttonId' => 'evt:15:guest:88:with_children',
             ],
         ]));
     }

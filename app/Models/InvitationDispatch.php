@@ -7,6 +7,7 @@ use App\Enums\InvitationDispatchStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class InvitationDispatch extends Model
 {
@@ -43,5 +44,20 @@ class InvitationDispatch extends Model
     public function guest(): BelongsTo
     {
         return $this->belongsTo(Guest::class);
+    }
+
+    public function getOutboundAssetUrlAttribute(?string $value): ?string
+    {
+        if (blank($value)) {
+            return $value;
+        }
+
+        $path = parse_url($value, PHP_URL_PATH);
+
+        if (! is_string($path) || ! str_starts_with($path, '/storage/')) {
+            return $value;
+        }
+
+        return rtrim(Storage::disk('public')->url(''), '/').'/'.ltrim(substr($path, strlen('/storage/')), '/');
     }
 }
