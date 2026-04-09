@@ -1,188 +1,713 @@
-<p align="center">
-  <a href="#"><img src="https://dev-to-uploads.s3.amazonaws.com/uploads/articles/57ge2v8fp17lcd8vmf1a.png" width="400" alt="LaraReact"></a>
-</p>
+# Convite App
 
-## About LaraReact Dashboard Template (Laravel 10)
+Sistema de convites para eventos via WhatsApp, construído com Laravel, Inertia.js, React e PrimeReact, com integração à Z-API para envio e recebimento de mensagens.
 
-LaraReact Dashboard Template is a Laravel Inertia and React-based web application template designed with inspiration from [Sakai PrimeReact](https://sakai.primereact.org/) for creating modern and interactive dashboard applications. This template provides you with a solid foundation for building powerful web applications with features such as:
+## Visão geral
 
-- [Laravel-based backend](https://laravel.com)
-- [Inertia.js](https://inertiajs.com) for seamless SPA development
-- [React](https://reactjs.org) for creating dynamic user interfaces
-- [PrimeReact](https://www.primefaces.org/primereact) UI components for a polished look and feel
-- [Sakai-react](https://github.com/primefaces/sakai-react) Free React Admin Template CSS
-- [Vite](https://vitejs.dev/) for faster development experience
+O objetivo da aplicação é permitir:
 
-LaraReact Dashboard Template is aimed at Laravel developers who want to kickstart their project development with a ready-made template that incorporates these technologies.
+- cadastro e gestão de eventos
+- cadastro manual e importação de convidados
+- envio de convites em texto, imagem ou PDF
+- uso de botões de RSVP no WhatsApp
+- recebimento de respostas por webhook
+- atualização automática do status do convidado
+- envio de lembretes para convidados indecisos
+- acompanhamento da fila de envio
+- visualização de indicadores no dashboard
 
-## Getting Started
+## Stack
 
-To get started with LaraReact Dashboard Template first clone the [LaraReact Dashboard Template](https://github.com/boadusamuel/laravel-inertia-react) repository.
+- PHP 8.2
+- Laravel 10
+- MySQL
+- Inertia.js
+- React
+- PrimeReact
+- Vite
+- Laravel Queue com `database`
+- Scheduler nativo do Laravel
+- Z-API como gateway de WhatsApp
 
-**Clone Repository:**
-   ```bash
-   git clone https://github.com/boadusamuel/laravel-inertia-react
-   ```
+## Funcionalidades implementadas
 
-## Frontend
-```shell
-$ npm install
-$ npm run dev
+### Eventos
+
+- criação e edição de eventos
+- suporte a convite:
+  - `text`
+  - `image`
+  - `pdf`
+- upload de arquivo para imagem e PDF
+- substituição do arquivo anterior ao trocar o convite
+- remoção do arquivo anterior ao voltar o tipo para `Texto`
+
+### Convidados
+
+- cadastro manual por evento
+- importação em lote no formato `Nome;Telefone`
+- telefone único por evento
+- edição e exclusão de convidados
+- polling automático da lista de convidados a cada 10 segundos com o modal aberto
+
+### RSVP
+
+Fluxo atual de respostas:
+
+- `Vou` -> status `confirmed`
+- `Não vou` -> status `declined`
+- `Ainda não sei` -> status `undecided`
+- `Vou com crianças` -> status `confirmed`
+
+Observações:
+
+- a informação de ir com crianças fica registrada usando `companions_count > 0`
+- na interface isso aparece na coluna `Com crianças` com `Sim` ou `Não`
+- o sistema ainda mantém suporte legado para fluxos antigos com acompanhante, mas o fluxo ativo do produto hoje é `Vou com crianças`
+
+### Lembretes
+
+- quando o convidado responde `Ainda não sei`, o sistema agenda lembrete
+- o scheduler verifica lembretes vencidos a cada minuto
+- o lembrete gera novo dispatch e reutiliza o fluxo de envio do convite
+
+### Fila
+
+- fila de envios por evento
+- processamento de convites e lembretes com jobs
+- fila de prioridade `high` para webhook de entrada
+- fila `default` para envios
+- tela para acompanhamento da fila por evento
+
+### Dashboard
+
+- total de eventos
+- total de convidados
+- total de confirmados
+- total de confirmados com crianças
+- total de lembretes pendentes
+- RSVP por evento
+
+## Arquitetura
+
+O projeto está organizado como um monólito modular em Laravel.
+
+### Backend
+
+- `app/Http/Controllers`
+  - controllers administrativos
+  - dashboard
+  - webhooks
+- `app/Jobs`
+  - envio de convites
+  - envio de lembretes
+  - processamento de mensagens recebidas
+- `app/Services`
+  - parser de resposta
+  - máquina de estados do convidado
+  - normalização de telefone
+  - agendamento de lembretes
+  - configuração da Z-API
+- `app/Integrations/ZApi`
+  - implementação do gateway de WhatsApp
+- `app/Models`
+  - entidades persistidas
+- `app/Enums`
+  - enums de status e tipos de negócio
+
+### Frontend
+
+- `resources/js/Pages`
+  - dashboard
+  - eventos
+  - fila
+  - configurações da Z-API
+- `resources/js/Components`
+  - cards
+  - tags de status
+- `resources/js/Layouts`
+  - layout autenticado
+  - menu
+  - topbar
+
+## Estrutura principal
+
+```text
+app/
+  Console/
+  Enums/
+  Http/
+    Controllers/
+    Middleware/
+    Requests/
+  Integrations/
+    ZApi/
+  Jobs/
+  Models/
+  Services/
+  Support/
+database/
+  migrations/
+resources/
+  js/
+    Components/
+    Layouts/
+    Pages/
+routes/
+  web.php
+  api.php
 ```
 
-## Backend
-```shell
-$ cp .env.example .env
-$ composer install
-$ php artisan key:generate
-$ php artisan serve
+## Banco de dados
+
+### Tabelas principais
+
+- `events`
+- `guests`
+- `invitation_dispatches`
+- `guest_responses`
+- `reminder_schedules`
+- `webhook_receipts`
+- `app_settings`
+- `jobs`
+- `failed_jobs`
+- `users`
+
+### Resumo das entidades
+
+#### `events`
+
+Armazena os dados do evento:
+
+- nome
+- anfitrião
+- data
+- hora
+- local
+- tipo do convite
+- URL do asset
+- template da mensagem
+- dias de lembrete
+- status
+
+#### `guests`
+
+Armazena os convidados por evento:
+
+- nome
+- telefone original
+- telefone normalizado
+- status atual
+- `companions_count`
+- timestamps de resposta e envio
+
+#### `invitation_dispatches`
+
+Histórico de cada envio realizado:
+
+- tipo do envio
+- tipo da mídia
+- mensagem enviada
+- URL do asset
+- status de entrega
+- IDs retornados pelo provider
+
+#### `guest_responses`
+
+Histórico de cada resposta recebida:
+
+- `inbound_message_id`
+- mensagem bruta
+- intenção interpretada
+- quantidade de acompanhantes/crianças quando aplicável
+- payload original do webhook
+
+#### `reminder_schedules`
+
+Controle dos lembretes:
+
+- data programada
+- status
+- motivo
+- data de processamento
+
+#### `webhook_receipts`
+
+Auditoria dos webhooks recebidos:
+
+- provider
+- tipo do evento
+- identificador externo
+- headers
+- payload bruto
+- data de recebimento
+- data de processamento
+
+#### `app_settings`
+
+Persistência de configurações de integração, como:
+
+- `zapi.instance_id`
+- `zapi.token`
+- `zapi.client_token`
+- status do último teste de conexão
+
+## Estados de negócio
+
+### Status do convidado
+
+Arquivo: [app/Enums/GuestStatus.php](/private/var/www/convite-app/app/Enums/GuestStatus.php)
+
+- `pending`
+- `confirmed`
+- `declined`
+- `undecided`
+- `confirmed_with_companion`
+- `waiting_companion_count`
+
+Observação:
+
+- o sistema ainda preserva estados legados de acompanhante
+- para o fluxo atual de crianças, o convidado fica como `confirmed` com `companions_count > 0`
+
+### Tipos de intenção interpretada
+
+Arquivo: [app/Enums/ParsedIntent.php](/private/var/www/convite-app/app/Enums/ParsedIntent.php)
+
+- `confirmed`
+- `declined`
+- `undecided`
+- `with_children`
+- `waiting_companion_count`
+- `companion_count`
+- `unknown`
+- `ignored`
+
+## Regras de negócio do RSVP
+
+Implementação principal:
+
+- [app/Services/WhatsappResponseParser.php](/private/var/www/convite-app/app/Services/WhatsappResponseParser.php)
+- [app/Services/GuestStateMachine.php](/private/var/www/convite-app/app/Services/GuestStateMachine.php)
+- [app/Jobs/ProcessIncomingWhatsappMessageJob.php](/private/var/www/convite-app/app/Jobs/ProcessIncomingWhatsappMessageJob.php)
+
+### Botões enviados hoje
+
+- `Vou`
+- `Não vou`
+- `Ainda não sei`
+- `Vou com crianças`
+
+### Resultado de cada botão
+
+- `Vou`
+  - status `confirmed`
+- `Não vou`
+  - status `declined`
+- `Ainda não sei`
+  - status `undecided`
+  - agenda lembrete
+- `Vou com crianças`
+  - status `confirmed`
+  - `companions_count = 1`
+  - coluna `Com crianças = Sim`
+
+### Respostas automáticas
+
+- `confirmed`
+  - `Presença confirmada.`
+- `declined`
+  - `Tudo bem. Obrigado por responder.`
+- `undecided`
+  - `Vou te lembrar novamente 15 dias antes do evento.`
+- `with_children`
+  - `Presença confirmada com crianças.`
+
+## Fluxo de envio
+
+### 1. Criação do dispatch
+
+Quando o usuário clica em `Fila de envio`, a rota:
+
+- `POST /events/{event}/invitations/send`
+
+executa [EventInvitationController.php](/private/var/www/convite-app/app/Http/Controllers/Admin/EventInvitationController.php).
+
+O controller:
+
+- seleciona convidados com status:
+  - `pending`
+  - `undecided`
+- cria um `invitation_dispatch` por convidado
+- despacha `SendInvitationJob`
+
+### 2. Execução do job
+
+Arquivo: [app/Jobs/SendInvitationJob.php](/private/var/www/convite-app/app/Jobs/SendInvitationJob.php)
+
+O job:
+
+- carrega evento e convidado
+- monta a mensagem com `InvitationMessageBuilder`
+- decide o tipo de envio:
+  - texto com botões
+  - imagem + botões
+  - PDF + botões
+- salva:
+  - `provider_message_id`
+  - `provider_zaap_id`
+  - `delivery_status`
+  - `sent_at`
+  - payload do provider
+
+### 3. Proteção contra envios antigos
+
+O job possui proteção para:
+
+- ignorar dispatch antigo quando já existe um dispatch mais novo do mesmo tipo para o mesmo convidado
+- preferir sempre o asset atual do evento no momento do envio
+
+Isso evita:
+
+- reutilização de URL antiga
+- envio de convite desatualizado após troca de imagem/PDF/texto
+
+## Fluxo de recebimento
+
+### Endpoint de webhook
+
+- `POST /api/webhooks/zapi/messages`
+- `POST /api/webhooks/zapi/message-status`
+
+Arquivo: [app/Http/Controllers/Webhooks/ZApiWebhookController.php](/private/var/www/convite-app/app/Http/Controllers/Webhooks/ZApiWebhookController.php)
+
+### Recebimento de mensagem
+
+Ao receber webhook:
+
+1. o payload é salvo em `webhook_receipts`
+2. o sistema dispara `ProcessIncomingWhatsappMessageJob`
+3. o job processa o conteúdo
+4. a resposta é salva em `guest_responses`
+5. o status do convidado é atualizado
+6. se necessário, o sistema envia resposta automática
+
+### Identificação do evento correto
+
+O sistema usa `buttonId` contextualizado, no formato:
+
+```text
+evt:{event_id}:guest:{guest_id}:{action}
 ```
 
-# Project Settings
+Exemplos:
 
-The `AppConfig` component is a React component designed to provide a user interface for configuring the layout settings of the project. It utilizes the PrimeReact library for UI components and leverages context provided by the `LayoutContext` and `PrimeReactContext` to manage and apply configuration changes.
+- `evt:15:guest:88:confirmed`
+- `evt:15:guest:88:declined`
+- `evt:15:guest:88:undecided`
+- `evt:15:guest:88:with_children`
 
+Com isso, mesmo que o mesmo telefone exista em eventos diferentes, a resposta por botão é vinculada ao convidado e evento corretos.
 
-## Table of Contents
+## Lembretes
 
-- [Usage: Accessing AppConfig Button on the Dashboard](#usage-accessing-appconfig-button-on-the-dashboard)
-- [Configuration Options](#configuration-options)
-    - [Scale](#scale)
-    - [Menu Type](#menu-type)
-    - [Input Style](#input-style)
-    - [Ripple Effect](#ripple-effect)
-    - [Themes](#themes)
-- [Usage: Applying Selected Theme to App.blade.php](#usage-applying-selected-theme-to-appbladephp)
+### Agendamento
 
+Arquivo: [app/Services/ReminderScheduler.php](/private/var/www/convite-app/app/Services/ReminderScheduler.php)
 
-Usage: Accessing AppConfig Button on the Dashboard
---------------------------------------------------
+Quando o convidado responde `Ainda não sei`:
 
-The `AppConfig` component provides a convenient way to access and customize the layout settings directly from the dashboard interface. Follow these steps to utilize the AppConfig button:
+- o sistema agenda um registro em `reminder_schedules`
+- a data usa a regra `event_date - reminder_days_before`
 
-1.  Navigate to the Dashboard:
+### Disparo
 
-2.  Locate AppConfig Button:
+Arquivos:
 
-    -   Look for the configuration button represented by a cog icon typically positioned on the right center of the screen.
-3.  Click the AppConfig Button:
+- [app/Console/Kernel.php](/private/var/www/convite-app/app/Console/Kernel.php)
+- [app/Console/Commands/DispatchDueReminders.php](/private/var/www/convite-app/app/Console/Commands/DispatchDueReminders.php)
+- [app/Jobs/SendReminderJob.php](/private/var/www/convite-app/app/Jobs/SendReminderJob.php)
 
-    -   Once you've located the AppConfig button, click on it to open the configuration sidebar.
-4.  Adjust Configuration Options:
+O scheduler roda:
 
-    -   The sidebar will reveal various configuration options:
-        -   Scale: Adjust the font size of the application.
-        -   Menu Type: Choose between "Static" and "Overlay" menu types.
-        -   Input Style: Select between "Outlined" and "Filled" input styles.
-        -   Ripple Effect: Toggle the ripple effect on user interactions.
-        -   Themes: Choose from a variety of themes categorized by design systems (Bootstrap, Material Design, etc.).
-5.  Preview Changes:
+- `reminders:dispatch-due` a cada minuto
 
-    -   Visualize the changes in real-time as you adjust the configuration options.
-6.  Apply Theme:
+O comando:
 
-    -   For theme changes, click on the theme button of your choice to apply the selected theme and color scheme to the entire application.
-7.  Close AppConfig Sidebar:
+- busca lembretes pendentes vencidos
+- cria dispatch de lembrete
+- reaproveita `SendInvitationJob`
 
-    -   After configuring the settings, you can close the AppConfig sidebar by clicking outside the sidebar or using any provided close button.
+## Integração com a Z-API
 
-Configuration Options
----------------------
+### Configuração
 
-The `AppConfig` component provides a sidebar with various configuration options that can be adjusted to customize the project's layout and appearance. These options include:
+A configuração pode vir de:
 
-### Scale
+- tela administrativa `/settings/zapi`
+- `.env`
 
-The "Scale" section allows users to adjust the font size of the application. Users can increment or decrement the scale and visualize the changes in real-time.
+Implementação:
 
-### Menu Type
+- [app/Services/ZApiSettingsService.php](/private/var/www/convite-app/app/Services/ZApiSettingsService.php)
 
-The "Menu Type" section provides options to select the layout's menu mode. Users can choose between "Static" and "Overlay" menu types, influencing the navigation experience.
+### Campos usados
 
-### Input Style
+- `INSTANCE_ID`
+- `INSTANCE_TOKEN`
+- `CLIENT_TOKEN` opcional, dependendo da instância
 
-The "Input Style" section lets users choose between "Outlined" and "Filled" input styles, influencing the appearance of input fields in the application.
+### Gateway
 
-### Ripple Effect
+Arquivo: [app/Integrations/ZApi/ZApiWhatsappGateway.php](/private/var/www/convite-app/app/Integrations/ZApi/ZApiWhatsappGateway.php)
 
-The "Ripple Effect" section includes a toggle switch to enable or disable the ripple effect on user interactions.
+Métodos implementados:
 
-### Themes
+- `sendText`
+- `sendButtonList`
+- `sendImage`
+- `sendDocument`
 
-The "Themes" section categorizes available themes into different design systems:
+### Teste de conexão
 
--   Bootstrap
--   Material Design
--   Material Design Compact
--   Tailwind
--   Fluent UI
--   PrimeOne Design - 2022
--   PrimeOne Design - 2021
+A tela de configurações permite:
 
-For each design system, multiple theme options are provided, each represented by a button with a preview image. Clicking on a theme button applies the selected theme and color scheme to the application.
+- salvar credenciais
+- testar conexão com a instância
 
-Feel free to explore and customize these options according to the desired look and feel of the "use client" project.
+## Rotas principais
 
+### Web
 
-Usage: Applying Selected Theme to App.blade.php
------------------------------------------------
+Arquivo: [routes/web.php](/private/var/www/convite-app/routes/web.php)
 
-Once you have chosen a preferred theme, follow these steps to integrate the selected theme into the `app.blade.php` file:
+Rotas principais:
 
-1.  Choose a Theme:
+- `GET /dashboard`
+- `GET /events`
+- `POST /events`
+- `PATCH|POST /events/{event}`
+- `GET /events/{event}`
+- `GET /events/{event}/queue`
+- `POST /events/{event}/guests`
+- `PATCH /events/{event}/guests/{guest}`
+- `DELETE /events/{event}/guests/{guest}`
+- `POST /events/{event}/guests/import`
+- `POST /events/{event}/invitations/send`
+- `POST /events/{event}/reminders/send`
+- `GET /settings/zapi`
+- `PUT /settings/zapi`
+- `POST /settings/zapi/test`
 
-    -   Using the AppConfig sidebar, select your preferred theme from the available options.
+### API
 
-2. Navigate to app.blade.php:
+Arquivo: [routes/api.php](/private/var/www/convite-app/routes/api.php)
 
-    -   Locate the `app.blade.php` file in your project's `resources/views` directory.
-3. Paste Link in Head Section:
+- `POST /api/webhooks/zapi/messages`
+- `POST /api/webhooks/zapi/message-status`
 
-    -   Open the `app.blade.php` file and locate the `<head>` section.
-    -   Paste the `<link>` tag with `id="theme-css"` within the `<head>` section. It should look something like this with your selected theme:
+## Execução local
 
+### 1. Dependências
 
-```html
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-
-        <title inertia>{{ config('app.name', 'LaraReact') }}</title>
-
-        <!-- Scripts -->
-        @routes
-        @viteReactRefresh
-        @vite(['resources/js/app.jsx', "resources/js/Pages/{$page['component']}.jsx"])
-        @inertiaHead
-
-        <link id="theme-css" href={{asset('/themes/lara-light-indigo/theme.css')}} rel="stylesheet"></link>
-    </head>
-    <body class="font-sans antialiased">
-        @inertia
-</body></html>
+```bash
+composer install
+npm install
 ```
 
-4. Set the Chosen theme inside the `LayoutProvider` within the `layoutcontext` component 
-```jsx
-    const [layoutConfig, setLayoutConfig] = useState({
-        ripple: false,
-        inputStyle: 'outlined',
-        menuMode: 'static',
-        colorScheme: 'light',
-        theme: 'tailwind-light',
-        scale: 14
-    });
+### 2. Ambiente
+
+```bash
+cp .env.example .env
+php artisan key:generate
 ```
 
-4. Delete Unwanted Themes:
+### 3. Banco
 
-    -   In the public directory, navigate to the `images/layout/themes` folder.
-    -   Delete the CSS files of the themes you no longer need. This step helps in keeping your project clean and reduces unnecessary file clutter.
-5. Save Changes:
+Exemplo atual:
 
-    -   Save the changes to the `app.blade.php` file.
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=db_convite_app
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-By following these steps, you have successfully integrated the selected theme into the main layout of your application. Remember to clean up the unwanted themes to maintain a tidy project structure.
+Criar as tabelas:
 
-**NB: This project is still under development please report any bugs to the issue section of this repo**
+```bash
+php artisan migrate
+```
+
+Recriar tudo do zero:
+
+```bash
+php artisan migrate:fresh
+```
+
+### 4. Storage público
+
+```bash
+php artisan storage:link
+```
+
+### 5. Frontend e backend
+
+```bash
+php artisan serve
+npm run dev
+```
+
+### 6. Fila
+
+Como o webhook usa a fila `high`, o worker recomendado localmente é:
+
+```bash
+php artisan queue:work --queue=high,default
+```
+
+### 7. Scheduler
+
+```bash
+php artisan schedule:work
+```
+
+## Comandos úteis
+
+### Banco
+
+```bash
+php artisan migrate
+php artisan migrate:fresh
+php artisan migrate:fresh --seed
+```
+
+### Queue
+
+```bash
+php artisan queue:work --queue=high,default
+php artisan queue:restart
+```
+
+### Scheduler
+
+```bash
+php artisan schedule:work
+php artisan reminders:dispatch-due
+```
+
+### Cache e config
+
+```bash
+php artisan optimize:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+```
+
+### Assets
+
+```bash
+php artisan storage:link
+```
+
+## URL pública para arquivos
+
+Convites com imagem e PDF dependem de URL pública acessível externamente pela Z-API.
+
+Por isso:
+
+- `APP_URL` deve apontar para um host público válido
+- o link `public/storage` precisa existir
+- o domínio precisa responder externamente
+
+Exemplo:
+
+```env
+APP_URL=https://math-votes-ground-products.trycloudflare.com
+```
+
+O sistema já normaliza URLs antigas de `/storage/...` para o domínio atual do `APP_URL`, evitando que imagens antigas continuem aparecendo com um host antigo.
+
+## Testes
+
+Principais grupos de teste já existentes:
+
+- `EventManagementTest`
+- `EventQueueTest`
+- `GuestManagementTest`
+- `SendInvitationButtonsTest`
+- `ProcessIncomingWebhookContextTest`
+- `WhatsappResponseParserTest`
+- `GuestStateMachineTest`
+- `ZApiConnectionTest`
+- `ZApiSettingsTest`
+
+Executar tudo:
+
+```bash
+php artisan test
+```
+
+Executar grupos específicos:
+
+```bash
+php artisan test --filter=SendInvitationButtonsTest
+php artisan test --filter='WhatsappResponseParserTest|GuestStateMachineTest'
+```
+
+## Regras e decisões importantes
+
+- toda integração externa relevante roda em fila
+- o webhook responde rápido e delega processamento
+- a identificação correta da resposta por evento usa `buttonId`
+- o sistema mantém histórico de envios e respostas
+- convidados só entram na fila de convite se estiverem:
+  - `pending`
+  - `undecided`
+- URLs de assets são normalizadas para o domínio atual
+- dispatches antigos podem ser descartados quando um envio mais novo já existir
+
+## Limitações atuais
+
+- ainda existem estados legados de acompanhante no domínio
+- respostas por texto livre são menos seguras que respostas por botão quando o mesmo telefone aparece em mais de um evento
+- a Z-API pode exigir `Client-Token` em alguns cenários de status/teste
+- a build ainda mostra avisos antigos de assets do tema Sakai em `resources/css/layout.css`
+
+## Checklist de operação
+
+Para o sistema funcionar em ambiente local ou servidor:
+
+1. configurar `.env`
+2. rodar `php artisan migrate`
+3. rodar `php artisan storage:link`
+4. rodar `php artisan serve`
+5. rodar `npm run dev`
+6. rodar `php artisan queue:work --queue=high,default`
+7. rodar `php artisan schedule:work`
+8. configurar a Z-API na tela `/settings/zapi`
+9. expor uma URL pública válida se for usar imagem ou PDF
+10. cadastrar o webhook:
+    - `/api/webhooks/zapi/messages`
+    - `/api/webhooks/zapi/message-status`
+
+## Arquivos de referência
+
+- [routes/web.php](/private/var/www/convite-app/routes/web.php)
+- [routes/api.php](/private/var/www/convite-app/routes/api.php)
+- [app/Http/Controllers/Admin/EventController.php](/private/var/www/convite-app/app/Http/Controllers/Admin/EventController.php)
+- [app/Http/Controllers/Admin/EventInvitationController.php](/private/var/www/convite-app/app/Http/Controllers/Admin/EventInvitationController.php)
+- [app/Http/Controllers/Webhooks/ZApiWebhookController.php](/private/var/www/convite-app/app/Http/Controllers/Webhooks/ZApiWebhookController.php)
+- [app/Jobs/SendInvitationJob.php](/private/var/www/convite-app/app/Jobs/SendInvitationJob.php)
+- [app/Jobs/ProcessIncomingWhatsappMessageJob.php](/private/var/www/convite-app/app/Jobs/ProcessIncomingWhatsappMessageJob.php)
+- [app/Jobs/SendReminderJob.php](/private/var/www/convite-app/app/Jobs/SendReminderJob.php)
+- [app/Services/WhatsappResponseParser.php](/private/var/www/convite-app/app/Services/WhatsappResponseParser.php)
+- [app/Services/GuestStateMachine.php](/private/var/www/convite-app/app/Services/GuestStateMachine.php)
+- [app/Integrations/ZApi/ZApiWhatsappGateway.php](/private/var/www/convite-app/app/Integrations/ZApi/ZApiWhatsappGateway.php)
+- [resources/js/Pages/Events/Index.jsx](/private/var/www/convite-app/resources/js/Pages/Events/Index.jsx)
+- [resources/js/Pages/Events/Show.jsx](/private/var/www/convite-app/resources/js/Pages/Events/Show.jsx)
+- [resources/js/Pages/Events/Queue.jsx](/private/var/www/convite-app/resources/js/Pages/Events/Queue.jsx)
+- [resources/js/Pages/Dashboard.jsx](/private/var/www/convite-app/resources/js/Pages/Dashboard.jsx)
