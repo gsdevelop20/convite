@@ -31,18 +31,17 @@ export default function Register() {
 
     return (
         <GuestLayout>
-            <Head title="Register" />
+            <Head title="Registar" />
 
             <div className="flex align-items-center justify-content-center flex-column">
-                <img src="/images/logo/-dark.svg" alt="hyper" height={50} className="mb-3"/>
                 <div className="surface-card p-6 sm:p-4 shadow-2 border-round w-full lg:w-4">
                     <div className="text-center mb-5">
-                        <div className="text-900 text-3xl font-medium mb-3">Register</div>
+                        <div className="text-900 text-3xl font-medium mb-3">Registrar</div>
                     </div>
                     <form onSubmit={submit}>
                         <div>
                                 <div className="mb-3">
-                                    <label htmlFor="name" className="block text-900 font-medium mb-2">Name</label>
+                                    <label htmlFor="name" className="block text-900 font-medium mb-2">Nome</label>
                                     <InputText
                                         id="name"
                                         type="text"
@@ -96,7 +95,7 @@ export default function Register() {
                                     href={route('login')}
                                     className=""
                                 >
-                                    Already registered?
+                                    Já possuo uma conta?
                                 </Link>
 
                             </div>

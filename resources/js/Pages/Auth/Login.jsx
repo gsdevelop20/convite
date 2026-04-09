@@ -42,9 +42,9 @@ export default function Login({status, canResetPassword}) {
             <div className="flex align-items-center justify-content-center flex-column">
                 <div className="surface-card p-6 sm:p-4 shadow-2 border-round w-full lg:w-4">
                     <div className="text-center mb-5">
-                        <div className="text-900 text-3xl font-medium mb-3">Welcome Back</div>
-                        <span className="text-600 font-medium line-height-3">Don't have an account?</span>
-                        <Link  href={route('register')} className="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Create today!</Link>
+                        <div className="text-900 text-3xl font-medium mb-3">Bem vindo de volta</div>
+                        <span className="text-600 font-medium line-height-3">Não tem uma conta?</span>
+                        <Link  href={route('register')} className="font-medium no-underline ml-2 text-blue-500 cursor-pointer">Criar</Link>
                     </div>
                     <form onSubmit={submit}>
                         <div>
@@ -81,14 +81,14 @@ export default function Login({status, canResetPassword}) {
                                     <label htmlFor="rememberme-login">Remember me</label>
                                 </div>
 
-                                {canResetPassword && (
-                                    <Link
-                                        href={route('password.request')}
-                                        className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer"
-                                    >
-                                        Forgot your password?
-                                    </Link>
-                                )}
+                                {/*{canResetPassword && (*/}
+                                {/*    <Link*/}
+                                {/*        href={route('password.request')}*/}
+                                {/*        className="font-medium no-underline ml-2 text-blue-500 text-right cursor-pointer"*/}
+                                {/*    >*/}
+                                {/*        Esqueci minha senha?*/}
+                                {/*    </Link>*/}
+                                {/*)}*/}
                             </div>
 
                             <PrimaryButton label="Sign In" className="w-full" disabled={processing}/>
