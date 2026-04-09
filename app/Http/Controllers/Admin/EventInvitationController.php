@@ -22,7 +22,12 @@ class EventInvitationController extends Controller
             ])
             ->orderBy('id')
             ->get()
-            ->reject(fn ($guest) => $this->hasRecentInitialInvite($event->id, $guest->id))
+            ->reject(function ($guest) use ($event) {
+                return $guest->invitationDispatches()
+                    ->where('event_id', $event->id)
+                    ->where('kind', InvitationDispatchKind::InitialInvite)
+                    ->exists();
+            })
             ->values();
 
         $guests->each(function ($guest, int $index) use ($event): void {
@@ -34,8 +39,8 @@ class EventInvitationController extends Controller
                     'delivery_status' => InvitationDispatchStatus::Pending,
                 ]);
 
-                $batchDelayInMinutes = intdiv($index, 10) * 8;
-                $positionInBatch = $index % 10;
+                $batchDelayInMinutes = intdiv($index, 60) * 8;
+                $positionInBatch = $index % 60;
                 $secondsDelayWithinBatch = $this->secondsDelayWithinBatch($positionInBatch);
                 $scheduledFor = now()->addMinutes($batchDelayInMinutes)->addSeconds($secondsDelayWithinBatch);
 
