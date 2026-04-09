@@ -20,6 +20,8 @@ class Event extends Model
         'event_date',
         'start_time',
         'location_name',
+        'location_latitude',
+        'location_longitude',
         'location_address',
         'invitation_message_template',
         'invitation_asset_type',

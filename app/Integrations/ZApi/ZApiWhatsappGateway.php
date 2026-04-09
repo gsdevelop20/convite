@@ -29,15 +29,27 @@ class ZApiWhatsappGateway implements WhatsappGateway
             'message' => $message,
             'buttonList' => [
                 'buttons' => array_map(
-                    fn (array $button): array => [
-                        'id' => (string) $button['id'],
-                        'label' => (string) $button['label'],
+                    fn(array $button): array => [
+                        'id' => (string)$button['id'],
+                        'label' => (string)$button['label'],
                     ],
                     $buttons,
                 ),
             ],
             ...$options,
         ]);
+    }
+
+    public function sendLocation(string $phone, string $title, string $address, string $latitude, string $longitude, array $options = []): SendResult
+    {
+            return $this->send('/send-location', [
+                'phone' => $phone,
+                'title' => $title,
+                'address' => $address,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                ...$options
+            ]);
     }
 
     public function sendImage(string $phone, string $imageUrl, ?string $caption = null, array $options = []): SendResult
@@ -86,7 +98,7 @@ class ZApiWhatsappGateway implements WhatsappGateway
 
         $data = $response->json() ?? [];
 
-        if (! $response->successful()) {
+        if (!$response->successful()) {
             return new SendResult(
                 successful: false,
                 failureReason: $data['message'] ?? $response->body(),
@@ -96,8 +108,8 @@ class ZApiWhatsappGateway implements WhatsappGateway
 
         return new SendResult(
             successful: true,
-            providerMessageId: (string) ($data['messageId'] ?? $data['id'] ?? ''),
-            providerZaapId: isset($data['zaapId']) ? (string) $data['zaapId'] : null,
+            providerMessageId: (string)($data['messageId'] ?? $data['id'] ?? ''),
+            providerZaapId: isset($data['zaapId']) ? (string)$data['zaapId'] : null,
             payload: $data,
         );
     }

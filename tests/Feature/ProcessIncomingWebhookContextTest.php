@@ -249,6 +249,11 @@ class ProcessIncomingWebhookContextTest extends TestCase
             {
                 return new SendResult(successful: true, providerMessageId: 'doc-1');
             }
+
+            public function sendLocation(string $phone, string $title, string $address, string $latitude, string $longitude, array $options = []): SendResult
+            {
+                return new SendResult(successful: true, providerMessageId: 'location');
+            }
         };
 
         app()->instance(WhatsappGateway::class, $fakeGateway);

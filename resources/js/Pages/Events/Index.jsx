@@ -32,6 +32,8 @@ const initialForm = {
     event_date: '',
     start_time: '',
     location_name: '',
+    location_latitude: '',
+    location_longitude: '',
     location_address: '',
     invitation_message_template:
         'Olá :guest_name! Você está convidado para :event_name em :event_date, no local :location_name.',
@@ -390,6 +392,26 @@ export default function EventsIndex({ events }) {
                         <label htmlFor="location_name" className="block mb-2">Local</label>
                         <InputText id="location_name" value={form.data.location_name} onChange={(e) => form.setData('location_name', e.target.value)} />
                         {form.errors.location_name ? <small className="p-error">{form.errors.location_name}</small> : null}
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label htmlFor="location_latitude" className="block mb-2">Latitude</label>
+                        <InputText
+                            id="location_latitude"
+                            value={form.data.location_latitude ?? ''}
+                            onChange={(e) => form.setData('location_latitude', e.target.value)}
+                            placeholder="-15.793889"
+                        />
+                        {form.errors.location_latitude ? <small className="p-error">{form.errors.location_latitude}</small> : null}
+                    </div>
+                    <div className="col-12 md:col-6">
+                        <label htmlFor="location_longitude" className="block mb-2">Longitude</label>
+                        <InputText
+                            id="location_longitude"
+                            value={form.data.location_longitude ?? ''}
+                            onChange={(e) => form.setData('location_longitude', e.target.value)}
+                            placeholder="-47.882778"
+                        />
+                        {form.errors.location_longitude ? <small className="p-error">{form.errors.location_longitude}</small> : null}
                     </div>
                     <div className="col-12">
                         <label htmlFor="location_address" className="block mb-2">Endereço</label>

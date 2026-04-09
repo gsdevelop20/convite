@@ -33,6 +33,8 @@ class StoreEventRequest extends FormRequest
             'event_date' => ['required', 'date'],
             'start_time' => ['nullable', 'date_format:H:i'],
             'location_name' => ['required', 'string', 'max:255'],
+            'location_latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'location_longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'location_address' => ['required', 'string', 'max:255'],
             'invitation_message_template' => ['required', 'string'],
             'invitation_asset_type' => ['required', Rule::in(['text', 'image', 'pdf'])],

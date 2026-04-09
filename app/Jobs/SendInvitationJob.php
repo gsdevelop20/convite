@@ -51,6 +51,13 @@ class SendInvitationJob implements ShouldQueue
                     $assetUrl,
                     $message,
                 ),
+                fn () => $gateway->sendLocation(
+                    $guest->normalized_phone,
+                    $event->location_name ?? 'Local do evento',
+                    $event->location_address ?? 'Endereço não informado',
+                    $event->location_latitude ?? '0',
+                    $event->location_longitude ?? '0'
+                ),
                 fn () => $gateway->sendButtonList(
                     $guest->normalized_phone,
                     'Como deseja responder ao convite?',
@@ -64,6 +71,13 @@ class SendInvitationJob implements ShouldQueue
                     'pdf',
                     "convite-{$guest->id}.pdf",
                     $message,
+                ),
+                fn () => $gateway->sendLocation(
+                    $guest->normalized_phone,
+                    $event->location_name ?? 'Local do evento',
+                    $event->location_address ?? 'Endereço não informado',
+                    $event->location_latitude ?? '0',
+                    $event->location_longitude ?? '0'
                 ),
                 fn () => $gateway->sendButtonList(
                     $guest->normalized_phone,
@@ -128,13 +142,15 @@ class SendInvitationJob implements ShouldQueue
             ->exists();
     }
 
-    protected function sendAssetWithButtons(callable $sendAsset, callable $sendButtons)
+    protected function sendAssetWithButtons(callable $sendAsset, callable $sendLocation, callable $sendButtons)
     {
         $assetResult = $sendAsset();
 
-        if (! $assetResult->successful) {
+        if (!$assetResult->successful) {
             return $assetResult;
         }
+
+        $sendLocation();
 
         $buttonResult = $sendButtons();
 
