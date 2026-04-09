@@ -35,6 +35,7 @@ class SendReminderJob implements ShouldQueue
             'kind' => InvitationDispatchKind::Reminder,
             'message_type' => $reminder->event->invitation_asset_type->value,
             'outbound_asset_url' => $reminder->event->invitation_asset_url,
+            'scheduled_for' => now(),
             'delivery_status' => InvitationDispatchStatus::Pending,
         ]);
 

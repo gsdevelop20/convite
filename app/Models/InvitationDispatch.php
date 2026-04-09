@@ -24,6 +24,7 @@ class InvitationDispatch extends Model
         'provider_message_id',
         'provider_zaap_id',
         'sent_at',
+        'scheduled_for',
         'delivery_status',
         'failure_reason',
         'payload_json',
@@ -31,6 +32,7 @@ class InvitationDispatch extends Model
 
     protected $casts = [
         'sent_at' => 'datetime',
+        'scheduled_for' => 'datetime',
         'payload_json' => 'array',
         'kind' => InvitationDispatchKind::class,
         'delivery_status' => InvitationDispatchStatus::class,

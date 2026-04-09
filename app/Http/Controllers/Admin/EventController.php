@@ -151,6 +151,7 @@ class EventController extends Controller
                 'message_type' => $dispatch->message_type,
                 'delivery_status' => $dispatch->delivery_status?->value ?? 'pending',
                 'provider_message_id' => $dispatch->provider_message_id,
+                'scheduled_for' => optional($dispatch->scheduled_for)->format('Y-m-d H:i:s'),
                 'sent_at' => optional($dispatch->sent_at)->format('Y-m-d H:i'),
                 'created_at' => optional($dispatch->created_at)->format('Y-m-d H:i'),
                 'failure_reason' => $dispatch->failure_reason,
