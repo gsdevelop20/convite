@@ -23,6 +23,7 @@ class Event extends Model
         'location_latitude',
         'location_longitude',
         'location_address',
+        'send_location_pin',
         'invitation_message_template',
         'invitation_asset_type',
         'invitation_asset_url',
@@ -33,6 +34,7 @@ class Event extends Model
     protected $casts = [
         'event_date' => 'date',
         'invitation_asset_type' => InvitationAssetType::class,
+        'send_location_pin' => 'boolean',
         'status' => EventStatus::class,
     ];
 

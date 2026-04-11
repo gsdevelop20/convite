@@ -34,9 +34,10 @@ class EventController extends Controller
                 'location_latitude' => $event->location_latitude,
                 'location_longitude' => $event->location_longitude,
                 'location_address' => $event->location_address,
+                'send_location_pin' => $event->send_location_pin,
                 'invitation_message_template' => $event->invitation_message_template,
                 'invitation_asset_type' => $event->invitation_asset_type->value,
-                'invitation_asset_url' => $event->invitation_asset_url,
+                'invitation_asset_url' => Storage::disk('public')->url($event->invitation_asset_url),
                 'status' => $event->status->value,
                 'reminder_days_before' => $event->reminder_days_before,
                 'guests_count' => $event->guests_count,
@@ -88,10 +89,11 @@ class EventController extends Controller
                 'location_name' => $event->location_name,
                 'location_latitude' => $event->location_latitude,
                 'location_longitude' => $event->location_longitude,
+                'send_location_pin' => $event->send_location_pin,
                 'location_address' => $event->location_address,
                 'invitation_message_template' => $event->invitation_message_template,
                 'invitation_asset_type' => $event->invitation_asset_type->value,
-                'invitation_asset_url' => $event->invitation_asset_url,
+                'invitation_asset_url' => Storage::disk('public')->url($event->invitation_asset_url),
                 'status' => $event->status->value,
                 'reminder_days_before' => $event->reminder_days_before,
             ],
@@ -177,7 +179,7 @@ class EventController extends Controller
         if ($request->hasFile('invitation_asset_file')) {
             $this->deleteStoredInvitationAsset($event?->invitation_asset_url);
             $path = $request->file('invitation_asset_file')->store('invitation-assets', 'public');
-            $data['invitation_asset_url'] = Storage::disk('public')->url($path);
+            $data['invitation_asset_url'] = $path;
 
             return $data;
         }
@@ -203,13 +205,11 @@ class EventController extends Controller
             return;
         }
 
-        $path = parse_url($assetUrl, PHP_URL_PATH);
-
-        if (! is_string($path) || ! str_starts_with($path, '/storage/')) {
+        if (! is_string($assetUrl) || ! str_starts_with($assetUrl, '/storage/')) {
             return;
         }
 
-        $path = ltrim(substr($path, strlen('/storage/')), '/');
+        $path = ltrim(substr($assetUrl, strlen('/storage/')), '/');
 
         if ($path !== '') {
             Storage::disk('public')->delete($path);

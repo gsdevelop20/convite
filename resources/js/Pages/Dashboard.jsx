@@ -14,8 +14,7 @@ export default function Dashboard({ stats, rsvpByEvent, recentEvents }) {
                 <StatCard className="col-12 md:col-6 xl:col-4" title="Eventos" value={stats.events} subtitle="Base total cadastrada" icon="calendar" color="blue" />
                 <StatCard className="col-12 md:col-6 xl:col-4" title="Convidados" value={stats.guests} subtitle="Todos os eventos" icon="users" color="orange" />
                 <StatCard className="col-12 md:col-6 xl:col-4" title="Confirmados" value={stats.confirmed} subtitle="Inclui acompanhantes" icon="check-circle" color="green" />
-                <StatCard className="col-12 md:col-6 xl:col-6" title="Com crianças" value={stats.confirmedWithChildren} subtitle="Confirmados com crianças" icon="heart" color="pink" />
-                <StatCard className="col-12 md:col-6 xl:col-6" title="Lembretes" value={stats.pendingReminders} subtitle="Pendentes para envio" icon="send" color="purple" />
+                <StatCard className="col-12 md:col-6 xl:col-12" title="Com crianças" value={stats.confirmedWithChildren} subtitle="Confirmados com crianças" icon="heart" color="pink" />
 
                 <div className="col-12 xl:col-5">
                     <div className="card h-full">

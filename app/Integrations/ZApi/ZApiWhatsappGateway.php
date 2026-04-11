@@ -40,16 +40,20 @@ class ZApiWhatsappGateway implements WhatsappGateway
         ]);
     }
 
-    public function sendLocation(string $phone, string $title, string $address, string $latitude, string $longitude, array $options = []): SendResult
+    public function sendLocation(string $phone, string $title, string $address, string $latitude, string $longitude, array $options = []): ?SendResult
     {
-            return $this->send('/send-location', [
-                'phone' => $phone,
-                'title' => $title,
-                'address' => $address,
-                'latitude' => $latitude,
-                'longitude' => $longitude,
-                ...$options
-            ]);
+        if (blank($latitude) || blank($longitude)) {
+            return null;
+        }
+
+        return $this->send('/send-location', [
+            'phone' => $phone,
+            'title' => $title,
+            'address' => $address,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            ...$options
+        ]);
     }
 
     public function sendImage(string $phone, string $imageUrl, ?string $caption = null, array $options = []): SendResult

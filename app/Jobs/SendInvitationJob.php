@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 
 class SendInvitationJob implements ShouldQueue
 {
@@ -46,40 +47,44 @@ class SendInvitationJob implements ShouldQueue
 
         $result = match ($event->invitation_asset_type) {
             InvitationAssetType::Image => $this->sendAssetWithButtons(
-                fn () => $gateway->sendImage(
+                fn() => $gateway->sendImage(
                     $guest->normalized_phone,
                     $assetUrl,
                     $message,
                 ),
-                fn () => $gateway->sendLocation(
-                    $guest->normalized_phone,
-                    $event->location_name ?? 'Local do evento',
-                    $event->location_address ?? 'Endereço não informado',
-                    $event->location_latitude ?? '0',
-                    $event->location_longitude ?? '0'
-                ),
-                fn () => $gateway->sendButtonList(
+                fn() => $event->send_location_pin
+                    ? $gateway->sendLocation(
+                        $guest->normalized_phone,
+                        $event->location_name ?? 'Local do evento',
+                        $event->location_address ?? 'Endereço não informado',
+                        $event->location_latitude ?? '0',
+                        $event->location_longitude ?? '0'
+                    )
+                    : null,
+                fn() => $gateway->sendButtonList(
                     $guest->normalized_phone,
                     'Como deseja responder ao convite?',
                     $buttons,
                 ),
             ),
             InvitationAssetType::Pdf => $this->sendAssetWithButtons(
-                fn () => $gateway->sendDocument(
+                fn() => $gateway->sendDocument(
                     $guest->normalized_phone,
                     $assetUrl,
                     'pdf',
                     "convite-{$guest->id}.pdf",
                     $message,
                 ),
-                fn () => $gateway->sendLocation(
-                    $guest->normalized_phone,
-                    $event->location_name ?? 'Local do evento',
-                    $event->location_address ?? 'Endereço não informado',
-                    $event->location_latitude ?? '0',
-                    $event->location_longitude ?? '0'
-                ),
-                fn () => $gateway->sendButtonList(
+                fn() => $event->send_location_pin
+                    ? $gateway->sendLocation(
+                        $guest->normalized_phone,
+                        $event->location_name ?? 'Local do evento',
+                        $event->location_address ?? 'Endereço não informado',
+                        $event->location_latitude ?? '0',
+                        $event->location_longitude ?? '0'
+                    )
+                    : null,
+                fn() => $gateway->sendButtonList(
                     $guest->normalized_phone,
                     'Como deseja responder ao convite?',
                     $buttons,
@@ -129,7 +134,7 @@ class SendInvitationJob implements ShouldQueue
             return null;
         }
 
-        return $dispatch->event->invitation_asset_url ?: $dispatch->outbound_asset_url;
+        return Storage::disk('public')->url($dispatch->event->invitation_asset_url);
     }
 
     protected function hasBeenSuperseded(InvitationDispatch $dispatch): bool
@@ -142,7 +147,7 @@ class SendInvitationJob implements ShouldQueue
             ->exists();
     }
 
-    protected function sendAssetWithButtons(callable $sendAsset, callable $sendLocation, callable $sendButtons)
+    protected function sendAssetWithButtons(callable $sendAsset, ?callable $sendLocation, callable $sendButtons)
     {
         $assetResult = $sendAsset();
 
@@ -150,7 +155,9 @@ class SendInvitationJob implements ShouldQueue
             return $assetResult;
         }
 
-        $sendLocation();
+        if (is_callable($sendLocation)) {
+            $sendLocation();
+        }
 
         $buttonResult = $sendButtons();
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
 import { DataTable } from 'primereact/datatable';
@@ -10,6 +10,7 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { SplitButton } from 'primereact/splitbutton';
 import Layout from '@/Layouts/layout/layout.jsx';
 import StatusTag from '@/Components/events/StatusTag.jsx';
+import { InputSwitch } from 'primereact/inputswitch';
 
 const assetOptions = [
     { label: 'Texto', value: 'text' },
@@ -35,6 +36,7 @@ const initialForm = {
     location_latitude: '',
     location_longitude: '',
     location_address: '',
+    send_location_pin: false,
     invitation_message_template:
         'Olá :guest_name! Você está convidado para :event_name em :event_date, no local :location_name.',
     invitation_asset_type: 'text',
@@ -377,22 +379,26 @@ export default function EventsIndex({ events }) {
                     ) : null}
                     <div className="col-12">
                         <label htmlFor="name" className="block mb-2">Nome do evento</label>
-                        <InputText id="name" value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} />
+                        <InputText id="name" value={form.data.name}
+                                   onChange={(e) => form.setData('name', e.target.value)}/>
                         {form.errors.name ? <small className="p-error">{form.errors.name}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="host_name" className="block mb-2">Anfitrião</label>
-                        <InputText id="host_name" value={form.data.host_name} onChange={(e) => form.setData('host_name', e.target.value)} />
+                        <InputText id="host_name" value={form.data.host_name}
+                                   onChange={(e) => form.setData('host_name', e.target.value)}/>
                         {form.errors.host_name ? <small className="p-error">{form.errors.host_name}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="event_date" className="block mb-2">Data</label>
-                        <InputText id="event_date" type="date" value={form.data.event_date} onChange={(e) => form.setData('event_date', e.target.value)} />
+                        <InputText id="event_date" type="date" value={form.data.event_date}
+                                   onChange={(e) => form.setData('event_date', e.target.value)}/>
                         {form.errors.event_date ? <small className="p-error">{form.errors.event_date}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="start_time" className="block mb-2">Hora</label>
-                        <InputText id="start_time" type="time" value={form.data.start_time || ''} onChange={(e) => form.setData('start_time', e.target.value)} />
+                        <InputText id="start_time" type="time" value={form.data.start_time || ''}
+                                   onChange={(e) => form.setData('start_time', e.target.value)}/>
                         {form.errors.start_time ? <small className="p-error">{form.errors.start_time}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
@@ -403,12 +409,15 @@ export default function EventsIndex({ events }) {
                             value={form.data.reminder_days_before}
                             onChange={(e) => form.setData('reminder_days_before', Number(e.target.value))}
                         />
-                        {form.errors.reminder_days_before ? <small className="p-error">{form.errors.reminder_days_before}</small> : null}
+                        {form.errors.reminder_days_before ?
+                            <small className="p-error">{form.errors.reminder_days_before}</small> : null}
                     </div>
                     <div className="col-12">
                         <label htmlFor="location_name" className="block mb-2">Local</label>
-                        <InputText id="location_name" value={form.data.location_name} onChange={(e) => form.setData('location_name', e.target.value)} />
-                        {form.errors.location_name ? <small className="p-error">{form.errors.location_name}</small> : null}
+                        <InputText id="location_name" value={form.data.location_name}
+                                   onChange={(e) => form.setData('location_name', e.target.value)}/>
+                        {form.errors.location_name ?
+                            <small className="p-error">{form.errors.location_name}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="location_latitude" className="block mb-2">Latitude</label>
@@ -418,7 +427,8 @@ export default function EventsIndex({ events }) {
                             onChange={(e) => form.setData('location_latitude', e.target.value)}
                             placeholder="-15.793889"
                         />
-                        {form.errors.location_latitude ? <small className="p-error">{form.errors.location_latitude}</small> : null}
+                        {form.errors.location_latitude ?
+                            <small className="p-error">{form.errors.location_latitude}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="location_longitude" className="block mb-2">Longitude</label>
@@ -428,12 +438,22 @@ export default function EventsIndex({ events }) {
                             onChange={(e) => form.setData('location_longitude', e.target.value)}
                             placeholder="-47.882778"
                         />
-                        {form.errors.location_longitude ? <small className="p-error">{form.errors.location_longitude}</small> : null}
+                        {form.errors.location_longitude ?
+                            <small className="p-error">{form.errors.location_longitude}</small> : null}
+                    </div>
+                    <div className={"col-12  md:col-6"}>
+                        <label htmlFor="send_location_pin" className="block mb-2">Enviar localização com pin no mapa
+                            (requer latitude e longitude)</label>
+                        <InputSwitch checked={form.data.send_location_pin}
+                                     onChange={(e) => form.setData('send_location_pin', e.target.value)}
+                                     id="send_location_pin"/>
                     </div>
                     <div className="col-12">
                         <label htmlFor="location_address" className="block mb-2">Endereço</label>
-                        <InputText id="location_address" value={form.data.location_address} onChange={(e) => form.setData('location_address', e.target.value)} />
-                        {form.errors.location_address ? <small className="p-error">{form.errors.location_address}</small> : null}
+                        <InputText id="location_address" value={form.data.location_address}
+                                   onChange={(e) => form.setData('location_address', e.target.value)}/>
+                        {form.errors.location_address ?
+                            <small className="p-error">{form.errors.location_address}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="invitation_asset_type" className="block mb-2">Tipo do convite</label>
@@ -443,16 +463,19 @@ export default function EventsIndex({ events }) {
                             options={assetOptions}
                             onChange={(e) => handleAssetTypeChange(e.value)}
                         />
-                        {form.errors.invitation_asset_type ? <small className="p-error">{form.errors.invitation_asset_type}</small> : null}
+                        {form.errors.invitation_asset_type ?
+                            <small className="p-error">{form.errors.invitation_asset_type}</small> : null}
                     </div>
                     <div className="col-12 md:col-6">
                         <label htmlFor="status" className="block mb-2">Status</label>
-                        <Dropdown id="status" value={form.data.status} options={statusOptions} onChange={(e) => form.setData('status', e.value)} />
+                        <Dropdown id="status" value={form.data.status} options={statusOptions}
+                                  onChange={(e) => form.setData('status', e.value)}/>
                         {form.errors.status ? <small className="p-error">{form.errors.status}</small> : null}
                     </div>
                     <div className="col-12">
                         <div className="p-3 border-round bg-blue-50 text-blue-700 line-height-3">
-                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não vou</strong>, <strong>Ainda não sei</strong> e <strong>Vou com crianças</strong>.
+                            O convite inicial já será enviado com os botões de resposta <strong>Vou</strong>, <strong>Não
+                            vou</strong>, <strong>Ainda não sei</strong> e <strong>Vou com crianças</strong>.
                             {form.data.invitation_asset_type === 'text'
                                 ? ' No convite em texto, os botões seguem na mesma mensagem.'
                                 : ' No convite com imagem ou PDF, o arquivo vai primeiro e os botões são enviados logo depois.'}
@@ -482,7 +505,7 @@ export default function EventsIndex({ events }) {
                                                 src={form.data.invitation_asset_url}
                                                 alt="Convite atual"
                                                 className="block border-round border-1 surface-border"
-                                                style={{ maxWidth: '100%', maxHeight: '240px', objectFit: 'contain' }}
+                                                style={{maxWidth: '100%', maxHeight: '240px', objectFit: 'contain'}}
                                             />
                                             <a
                                                 href={form.data.invitation_asset_url}
@@ -490,7 +513,7 @@ export default function EventsIndex({ events }) {
                                                 rel="noreferrer"
                                                 className="inline-flex align-items-center gap-2 text-primary no-underline mt-2"
                                             >
-                                                <i className="pi pi-image" />
+                                                <i className="pi pi-image"/>
                                                 <span>Abrir imagem atual</span>
                                             </a>
                                         </>
@@ -501,22 +524,25 @@ export default function EventsIndex({ events }) {
                                             rel="noreferrer"
                                             className="inline-flex align-items-center gap-2 text-primary no-underline"
                                         >
-                                            <i className="pi pi-file-pdf" />
+                                            <i className="pi pi-file-pdf"/>
                                             <span>Abrir PDF atual</span>
                                         </a>
                                     )}
                                     <small className="text-600 block mt-2 break-all">
                                         URL atual: {form.data.invitation_asset_url}
                                     </small>
-                                    <small className="text-600 block mt-2">Se não enviar novo arquivo, o atual será mantido.</small>
+                                    <small className="text-600 block mt-2">Se não enviar novo arquivo, o atual será
+                                        mantido.</small>
                                 </div>
                             ) : null}
-                            {form.errors.invitation_asset_file ? <small className="p-error block mt-2">{form.errors.invitation_asset_file}</small> : null}
+                            {form.errors.invitation_asset_file ? <small
+                                className="p-error block mt-2">{form.errors.invitation_asset_file}</small> : null}
                         </div>
                     ) : null}
                     <div className="col-12">
                         <label htmlFor="description" className="block mb-2">Descrição</label>
-                        <InputTextarea id="description" rows={3} value={form.data.description || ''} onChange={(e) => form.setData('description', e.target.value)} />
+                        <InputTextarea id="description" rows={3} value={form.data.description || ''}
+                                       onChange={(e) => form.setData('description', e.target.value)}/>
                         {form.errors.description ? <small className="p-error">{form.errors.description}</small> : null}
                     </div>
                     <div className="col-12">
@@ -527,13 +553,15 @@ export default function EventsIndex({ events }) {
                             value={form.data.invitation_message_template}
                             onChange={(e) => form.setData('invitation_message_template', e.target.value)}
                         />
-                        {form.errors.invitation_message_template ? <small className="p-error">{form.errors.invitation_message_template}</small> : null}
+                        {form.errors.invitation_message_template ?
+                            <small className="p-error">{form.errors.invitation_message_template}</small> : null}
                         <small className="text-600 block mt-2">
-                            Variáveis disponíveis: :guest_name, :event_name, :host_name, :event_date, :location_name e :location_address.
+                            Variáveis disponíveis: :guest_name, :event_name, :host_name, :event_date, :location_name e
+                            :location_address.
                         </small>
                     </div>
                     <div className="col-12 flex justify-content-end gap-2 mt-3">
-                        <Button type="button" label="Cancelar" outlined onClick={closeDialog} />
+                        <Button type="button" label="Cancelar" outlined onClick={closeDialog}/>
                         <Button
                             type="button"
                             label={editingEvent ? 'Salvar alterações' : 'Criar evento'}
@@ -548,7 +576,7 @@ export default function EventsIndex({ events }) {
             <Dialog
                 header={selectedEvent ? `Convidados - ${selectedEvent.name}` : 'Convidados'}
                 visible={guestDialogVisible}
-                style={{ width: 'min(1100px, 96vw)' }}
+                style={{width: 'min(1100px, 96vw)'}}
                 onHide={closeGuestsDialog}
                 modal
             >

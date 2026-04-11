@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\EventInvitationController;
-use App\Http\Controllers\Admin\EventReminderController;
 use App\Http\Controllers\Admin\GuestController;
 use App\Http\Controllers\Admin\ZApiSettingsController;
 use App\Http\Controllers\DashboardController;
@@ -35,7 +34,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event}/guests/import', [GuestController::class, 'import'])->name('events.guests.import');
     Route::post('/events/{event}/invitations/send', [EventInvitationController::class, 'store'])->name('events.invitations.send');
     Route::post('/events/{event}/guests/{guest}/send-now', [EventInvitationController::class, 'sendNow'])->name('events.guests.send-now');
-    Route::post('/events/{event}/reminders/send', [EventReminderController::class, 'store'])->name('events.reminders.send');
     Route::get('/settings/zapi', [ZApiSettingsController::class, 'edit'])->name('settings.zapi.edit');
     Route::put('/settings/zapi', [ZApiSettingsController::class, 'update'])->name('settings.zapi.update');
     Route::post('/settings/zapi/test', [ZApiSettingsController::class, 'test'])->name('settings.zapi.test');
