@@ -289,6 +289,23 @@ export default function EventsIndex({ events }) {
         });
     };
 
+    const sendGuestNow = (guest) => {
+        if (!selectedEvent || !window.confirm(`Enviar o convite agora para ${guest.name}?`)) {
+            return;
+        }
+
+        router.post(route('events.guests.send-now', [selectedEvent.id, guest.id]), {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                router.reload({
+                    only: ['events'],
+                    preserveState: true,
+                    preserveScroll: true,
+                });
+            },
+        });
+    };
+
     useEffect(() => {
         if (!guestDialogVisible || !selectedEventId) {
             return undefined;
@@ -597,6 +614,7 @@ export default function EventsIndex({ events }) {
                                         header="Ações"
                                         body={(row) => (
                                             <div className="flex gap-2">
+                                                <Button type="button" icon="pi pi-send" rounded text severity="success" onClick={() => sendGuestNow(row)} />
                                                 <Button type="button" icon="pi pi-pencil" rounded text onClick={() => openGuestEdit(row)} />
                                                 <Button type="button" icon="pi pi-trash" rounded text severity="danger" onClick={() => deleteGuest(row)} />
                                             </div>

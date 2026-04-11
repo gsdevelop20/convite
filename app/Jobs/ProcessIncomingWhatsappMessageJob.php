@@ -110,6 +110,7 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
                     'kind' => InvitationDispatchKind::Followup,
                     'message_type' => 'text',
                     'outbound_message' => $transition->autoReply,
+                    'scheduled_for' => now(),
                     'delivery_status' => InvitationDispatchStatus::Pending,
                 ]);
 
@@ -183,6 +184,7 @@ class ProcessIncomingWhatsappMessageJob implements ShouldQueue
                 'kind' => InvitationDispatchKind::Followup,
                 'message_type' => 'text',
                 'outbound_message' => $index === 0 ? $message : 'Mais opções de acompanhantes:',
+                'scheduled_for' => now(),
                 'delivery_status' => InvitationDispatchStatus::Pending,
             ]);
 
